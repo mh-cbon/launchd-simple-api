@@ -1,12 +1,15 @@
 {
   "name": "launchd-simple-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "Simple API to manage services via macosx launchd",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-mac": "sh ./mocha-mac.sh"
   },
-  "keywords": [],
+  "keywords": [
+    "launchd", "macosx", "service"
+  ],
   "author": "mh-cbon <mh-cbon@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {

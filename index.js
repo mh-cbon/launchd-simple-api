@@ -6,23 +6,24 @@ var through2  = require('through2')
 
 var LaunchdSimpleApi = function (version) {
 
-  this.list = function (opts, then) {
-    var results = []
+  this.list = function (then) {
+    var results = {}
     var c = spawn('launchctl', ['list'], {stdio: 'pipe'})
     c.stdout
     .pipe(split())
     .pipe(through2(function (chunk, enc, cb) {
-      var d = chunl.toString();
+      var d = chunk.toString();
       if (d.match(/PID\s+status\s+label/)) {
         // skip headers
-      } else if (d.match(/^[0-9]+\s+(-|[0-9]+)\s+.+/)) {
+      } else if (d.match(/^(-|[0-9]+)\s+(-|[0-9]+)\s+.+/)) {
         //1419	-	0x7f97d040ea20.anonymous.launchctl
-        d = d.match(/^([0-9]+)\s+(-|[0-9]+)\s+(.+)/)
-        results.push({
+        d = d.match(/^(-|[0-9]+)\s+(-|[0-9]+)\s+(.+)/);
+        var id = d && d[3];
+        results[id] = {
           pid: d && d[1],
           status: d && d[2],
           id: d && d[3],
-        })
+        }
       }
       cb();
     }, function (cb) {
@@ -35,7 +36,14 @@ var LaunchdSimpleApi = function (version) {
     return c;
   }
 
-  this.describe = function (file, then) {
+  this.describe = function (serviceId, then) {
+    var that = this;
+    that.findUnitFile(serviceId, function (err, results) {
+      that.describeFile(results[0], then)
+    })
+  }
+
+  this.describeFile = function (file, then) {
     return this.convertUnitFile(file, 'json', function (err, content){
       if (err) return then(err);
       try{
@@ -46,7 +54,14 @@ var LaunchdSimpleApi = function (version) {
     });
   }
 
-  this.load = function (fileOrDir, opts, then) {
+  this.load = function (serviceId, opts, then) {
+    var that = this;
+    that.findUnitFile(serviceId, function (err, results){
+      if(!results.length) return then('not found')
+      that.loadServiceFile(results[0], opts, then)
+    })
+  }
+  this.loadServiceFile = function (fileOrDir, opts, then) {
 
     var args = ['load']
     if (opts.disabled || opts.d) args.push('-w')
@@ -75,7 +90,14 @@ var LaunchdSimpleApi = function (version) {
     return c;
   }
 
-  this.unload = function (fileOrDir, opts, then) {
+  this.unload = function (serviceId, opts, then) {
+    var that = this;
+    that.findUnitFile(serviceId, function (err, results){
+      if(!results.length) return then('not found')
+      that.unloadServiceFile(results[0], opts, then)
+    })
+  }
+  this.unloadServiceFile = function (fileOrDir, opts, then) {
 
     var args = ['unload']
     if (opts.disabled || opts.d) args.push('-w')
@@ -202,13 +224,13 @@ var LaunchdSimpleApi = function (version) {
 
     c.on('error', then);
 
-    c.stdin.write(JSON.stringify(obj))
+    c.stdin.end(JSON.stringify(obj))
 
     return c;
   }
 
   this.start = function (serviceId, then) {
-    var c = spawn('launchtl', ['start', serviceId], {stdio: 'pipe'})
+    var c = spawn('launchctl', ['start', serviceId], {stdio: 'pipe'})
     var stdout = ''
     c.stdout.on('data', function (d){
       stdout += d.toString();
@@ -227,7 +249,7 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.stop = function (serviceId, then) {
-    var c = spawn('launchtl', ['stop', serviceId], {stdio: 'pipe'})
+    var c = spawn('launchctl', ['stop', serviceId], {stdio: 'pipe'})
     var stdout = ''
     c.stdout.on('data', function (d){
       stdout += d.toString();
@@ -254,10 +276,10 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.install = function (opts, then) {
-    this.convertJsonToPlist(opts.plist, functon(err, plist) {
+    this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
       var dir = forgePath(opts.domain, opts.jobType);
-      fs.writeFile(path.join(dir, opts.plist.label + '.plist'), then)
+      fs.writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
     })
   }
 
@@ -269,13 +291,14 @@ var LaunchdSimpleApi = function (version) {
           if (i===results.length-1) then(err);
         })
       })
+      if(!results.length) then()
     })
-    fs.unlink(path.join(dir, opts.plist.label + '.plist'), then)
   }
 
   this.uninstallUnitFile = function (file, then) {
     fs.unlink(file, then)
   }
 
-
 }
+
+module.exports = LaunchdSimpleApi
