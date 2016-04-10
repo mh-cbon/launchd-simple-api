@@ -1,0 +1,7 @@
+/Vagrantfile
+/run-tests-mac.sh
+/mocha-mac.sh
+/utils/
+/test/
+/.vagrant/
+npm-debug.log
