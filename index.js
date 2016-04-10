@@ -101,7 +101,6 @@ var LaunchdSimpleApi = function (version) {
 
     var args = ['unload']
     if (opts.disabled || opts.d) args.push('-w')
-    if (opts.force || opts.f) args.push('-F')
     if (opts.session || opts.s) args = args.concat(['-S', opts.session || opts.s])
     if (opts.domain || opts.d) args = args.concat(['-D', opts.domain || opts.d])
     args.push(fileOrDir)
