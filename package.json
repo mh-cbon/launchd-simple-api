@@ -9,7 +9,7 @@
     "patch": "npm version patch -m \"patch %s\"",
     "minor": "npm version minor -m \"minor %s\"",
     "major": "npm version major -m \"major %s\"",
-    "preversion": "echo \"npm test: not defined\" && npi --explicit",
+    "preversion": "echo \"npm test: not defined\"",
     "version": "echo \"npm run build: not defined\"",
     "postversion": "git push && git push --tags && npm run public",
     "public": "npm publish --access=public"
