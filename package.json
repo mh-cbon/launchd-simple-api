@@ -1,6 +1,6 @@
 {
   "name": "@mh-cbon/launchd-simple-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple API to manage services via macosx launchd",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,9 @@
     "public": "npm publish --access=public"
   },
   "keywords": [
-    "launchd", "macosx", "service"
+    "launchd",
+    "macosx",
+    "service"
   ],
   "author": "mh-cbon <mh-cbon@users.noreply.github.com>",
   "license": "MIT",
