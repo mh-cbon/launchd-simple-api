@@ -1,6 +1,6 @@
 {
   "name": "@mh-cbon/launchd-simple-api",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Simple API to manage services via macosx launchd",
   "main": "index.js",
   "scripts": {
