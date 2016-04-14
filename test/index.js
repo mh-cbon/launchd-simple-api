@@ -10,32 +10,41 @@ describe('launchd simple api', function() {
   it('should list services', function(done) {
     lsa.list(function (err, items) {
       err && console.error(err);
-      (err===null).should.be.true;
-      ('com.apple.launchctl.Background' in items).should.be.true;
-      items['com.apple.launchctl.Background'].id.should.eql("com.apple.launchctl.Background")
-      items['com.apple.launchctl.Background'].pid.should.eql("-")
-      items['com.apple.launchctl.Background'].status.should.eql("0")
-      done();
+      // yosemite box exposes service 'com.apple.usernoted'
+      if (process.env['BOXTYPE']==='yosemite') {
+        items['com.apple.usernoted'].id.should.eql("com.apple.usernoted")
+        items['com.apple.usernoted'].pid.should.match(/[0-9]+/)
+        items['com.apple.usernoted'].status.should.eql("0")
+        Object.keys(items).indexOf('com.apple.usernoted').should.not.eql(-1);
+      } else {
+        // maverick box exposes com.apple.launchctl.Background
+        items['com.apple.launchctl.Background'].id.should.eql("com.apple.launchctl.Background")
+        items['com.apple.launchctl.Background'].pid.should.eql("-")
+        items['com.apple.launchctl.Background'].status.should.eql("0")
+        Object.keys(items).indexOf('com.apple.launchctl.Background').should.not.eql(-1);
+      }
+      // yeah. That s not cool.
+      done(err);
     })
   });
 
   it('should find a service file', function(done) {
     lsa.findUnitFile('com.apple.cfprefsd.xpc.agent', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
       results.length.should.eql(1)
-      results[0].should.eql('/System/Library/LaunchAgents/com.apple.cfprefsd.xpc.agent.plist')
-      done();
+      results[0].should.eql('/System/Library/LaunchAgents/com.apple.cfprefsd.xpc.agent.plist');
+      done(err);
     })
   });
 
   it('should describe a service file', function(done) {
     lsa.describeFile('/System/Library/LaunchAgents/com.apple.cfprefsd.xpc.agent.plist', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
-      results.Label.should.eql('com.apple.cfprefsd.xpc.agent')
-      results.ProgramArguments.should.eql([ '/usr/sbin/cfprefsd', 'agent' ])
-      done();
+      console.log(err);
+      console.log(results);
+      results.Label.should.eql('com.apple.cfprefsd.xpc.agent');
+      results.ProgramArguments.should.eql(['/usr/sbin/cfprefsd', 'agent']);
+      done(err);
     })
   });
 
@@ -50,9 +59,8 @@ describe('launchd simple api', function() {
   it('should describe a service', function(done) {
     lsa.describe('com.apple.cfprefsd.xpc.agent', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
-      results.Label.should.eql('com.apple.cfprefsd.xpc.agent')
-      results.ProgramArguments.should.eql([ '/usr/sbin/cfprefsd', 'agent' ])
+      results.Label.should.eql('com.apple.cfprefsd.xpc.agent');
+      results.ProgramArguments.should.eql(['/usr/sbin/cfprefsd', 'agent']);
       done();
     })
   });
@@ -84,11 +92,10 @@ describe('launchd simple api', function() {
   it('should convert a service file to json', function(done) {
     lsa.convertUnitFile('/System/Library/LaunchAgents/com.apple.cfprefsd.xpc.agent.plist', 'json', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
       results = JSON.parse(results);
       results.Label.should.eql('com.apple.cfprefsd.xpc.agent')
       results.ProgramArguments.should.eql([ '/usr/sbin/cfprefsd', 'agent' ])
-      done();
+      done(err);
     })
   });
 
@@ -103,9 +110,10 @@ describe('launchd simple api', function() {
   it('should convert a json object to xml plist', function(done) {
     lsa.convertJsonToPlist({what: 'ever'}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
       results.should.match(/<key>what<\/key>/)
       results.should.match(/<string>ever<\/string>/)
+      console.log(err);
+      (err===null).should.eql(true);
       done();
     })
   });
@@ -123,13 +131,12 @@ describe('launchd simple api', function() {
     }
     lsa.install(service, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      if (err) return done(err);
       var serviceFile = '/Users/vagrant/Library/LaunchAgents/fake.plist';
       fs.readFile(serviceFile, function (err2, content){
         err2 && console.error(err2);
-        (err2===null).should.eql(true);
         content.toString().should.match(/<string>fake<\/string>/);
-        done();
+        done(err2);
       })
     })
   });
@@ -191,7 +198,7 @@ describe('launchd simple api', function() {
     lsa.loadServiceFile(serviceFile, {}, function (err, results) {
       err && console.error(err);
       (err===null).should.eql(false);
-      done()
+      done();
     })
   });
 
@@ -199,17 +206,18 @@ describe('launchd simple api', function() {
     lsa.unload('wxcxwc', {}, function (err, results) {
       err && console.error(err);
       (err===null).should.eql(false);
-      done()
-    })
+      done();
+    });
   });
 
   it('should properly fail to unload a service file', function(done) {
     var serviceFile = '/Users/vagrant/Library/LaunchAgents/wxcwc.plist';
     lsa.unloadServiceFile(serviceFile, {}, function (err, results) {
       err && console.error(err);
+      console.log('%j', err);
       (err===null).should.eql(false);
       done()
-    })
+    });
   });
 
   it('should start a service', function(done) {

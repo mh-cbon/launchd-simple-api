@@ -1,5 +1,5 @@
 var spawn     = require('child_process').spawn;
-var fs        = require('fs')
+var fs        = require('fs-extra')
 var path      = require('path')
 var split     = require('split')
 var through2  = require('through2')
@@ -82,6 +82,9 @@ var LaunchdSimpleApi = function (version) {
     })
 
     c.on('close', function (code){
+      // on yosemite, a file not found will not return an exit code>0
+      // so, we shall apply some patch.
+      if (code===0 && (stdout+stderr).match(/(No such file or directory)/)) code = 1;
       then(code>0 ? stdout+stderr : null)
     })
 
@@ -117,6 +120,9 @@ var LaunchdSimpleApi = function (version) {
     })
 
     c.on('close', function (code){
+      // on yosemite, a file not found will not return an exit code>0
+      // so, we shall apply some patch.
+      if (code===0 && (stdout+stderr).match(/(No such file or directory)/)) code = 1;
       then(code>0 ? stdout+stderr : null)
     })
 
@@ -278,7 +284,10 @@ var LaunchdSimpleApi = function (version) {
     this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
       var dir = forgePath(opts.domain, opts.jobType);
-      fs.writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
+      fs.mkdirs(dir, function (err) {
+        if (err) return then(err);
+        fs.writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
+      })
     })
   }
 
