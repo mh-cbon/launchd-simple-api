@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Launchd-simple-api by mh-cbon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Launchd-simple-api</h1>
+      <h2 class="project-tagline"> Simple api for node to manage services via macosx launchd</h2>
+      <a href="https://github.com/mh-cbon/launchd-simple-api" class="btn">View on GitHub</a>
+      <a href="https://github.com/mh-cbon/launchd-simple-api/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/mh-cbon/launchd-simple-api/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="launchd-simple-api" class="anchor" href="#launchd-simple-api" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>launchd-simple-api</h1>
+
+<p>Simple API to manage services via macosx launchd</p>
+
+<h1>
+<a id="install" class="anchor" href="#install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install</h1>
+
+<div class="highlight highlight-source-shell"><pre>npm i @mh-cbon/launchd-simple-api</pre></div>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h1>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> LaunchSimpleApi <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>@mh-cbon/launchd-simple-api<span class="pl-pds">'</span></span>)
+
+<span class="pl-k">var</span> lsa <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">LaunchSimpleApi</span>()
+
+<span class="pl-c">// launchctl list</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">list</span>(<span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">items</span>) {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(items)
+})
+
+<span class="pl-c">// find the service file definition,</span>
+<span class="pl-c">// then convert it to a json object with plutil</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">describe</span>(<span class="pl-s"><span class="pl-pds">"</span>serviceId<span class="pl-pds">"</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">info</span>) {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(info)
+})
+
+<span class="pl-c">// convert given service file to a json object with plutil</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">describeFile</span>(<span class="pl-s"><span class="pl-pds">"</span>/SystemLibrary/Myservice.plist<span class="pl-pds">"</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">info</span>) {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(info)
+})
+
+<span class="pl-c">// find the service file definition,</span>
+<span class="pl-c">// then, launchctl load /the/service/file.plist</span>
+<span class="pl-smi">lsa</span>.<span class="pl-c1">load</span>(<span class="pl-s"><span class="pl-pds">'</span>fake<span class="pl-pds">'</span></span>, {disabled<span class="pl-k">:</span> <span class="pl-c1">false</span>, force<span class="pl-k">:</span> <span class="pl-c1">false</span>, domain<span class="pl-k">:</span> <span class="pl-c1">null</span>, session<span class="pl-k">:</span><span class="pl-c1">null</span>}, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// launchctl load /the/service/file.plist</span>
+<span class="pl-k">var</span> opts <span class="pl-k">=</span> {disabled<span class="pl-k">:</span> <span class="pl-c1">false</span>, force<span class="pl-k">:</span> <span class="pl-c1">false</span>, domain<span class="pl-k">:</span> <span class="pl-c1">null</span>, session<span class="pl-k">:</span><span class="pl-c1">null</span>}
+<span class="pl-smi">lsa</span>.<span class="pl-en">loadServiceFile</span>(<span class="pl-s"><span class="pl-pds">'</span>/SystemLibrary/Myservice.plist<span class="pl-pds">'</span></span>, opts, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// find the service file definition,</span>
+<span class="pl-c">// then, launchctl unload /the/service/file.plist</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">unload</span>(<span class="pl-s"><span class="pl-pds">'</span>fake<span class="pl-pds">'</span></span>, {disabled<span class="pl-k">:</span> <span class="pl-c1">false</span>, domain<span class="pl-k">:</span> <span class="pl-c1">null</span>, session<span class="pl-k">:</span><span class="pl-c1">null</span>}, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// launchctl unload /the/service/file.plist</span>
+<span class="pl-k">var</span> opts <span class="pl-k">=</span> {disabled<span class="pl-k">:</span> <span class="pl-c1">false</span>, domain<span class="pl-k">:</span> <span class="pl-c1">null</span>, session<span class="pl-k">:</span><span class="pl-c1">null</span>}
+<span class="pl-smi">lsa</span>.<span class="pl-en">unloadServiceFile</span>(<span class="pl-s"><span class="pl-pds">'</span>/SystemLibrary/Myservice.plist<span class="pl-pds">'</span></span>, opts, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// Look up through each defaults macosx service definition directories</span>
+<span class="pl-c">// and try to find for a file named such [service name].plist</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">findUnitFile</span>(<span class="pl-s"><span class="pl-pds">'</span>fake<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">list</span>) {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(list)
+})
+
+<span class="pl-c">// Test validity of the given plist service definition file</span>
+<span class="pl-c">// plutil /SystemLibrary/Myservice.plist</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">testUnitFile</span>(<span class="pl-s"><span class="pl-pds">'</span>/SystemLibrary/Myservice.plist<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// Convert given plist service file into a JSON object</span>
+<span class="pl-c">// plutil -convert json -o - /SystemLibrary/Myservice.plist</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">convertUnitFile</span>(<span class="pl-s"><span class="pl-pds">'</span>/SystemLibrary/Myservice.plist<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>json<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">info</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(info)
+})
+
+<span class="pl-c">// Convert given JSON object into a valid plist content</span>
+<span class="pl-c">// plutil -convert json -o - - (&lt; JSON object into stdin)</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">convertJsonToPlist</span>({some<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>object<span class="pl-pds">'</span></span>}, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">info</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(info)
+})
+
+<span class="pl-c">// launhctl start serviceId</span>
+<span class="pl-smi">lsa</span>.<span class="pl-c1">start</span>(<span class="pl-s"><span class="pl-pds">'</span>serviceId<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// launhctl stop serviceId</span>
+<span class="pl-smi">lsa</span>.<span class="pl-c1">stop</span>(<span class="pl-s"><span class="pl-pds">'</span>serviceId<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// launhctl start serviceId</span>
+<span class="pl-c">// launhctl stop serviceId</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">restart</span>(<span class="pl-s"><span class="pl-pds">'</span>serviceId<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// Find all service file definition for given options</span>
+<span class="pl-c">/*</span>
+<span class="pl-c">domain === user         =&gt; ~/Library/LaunchAgents</span>
+<span class="pl-c">domain === global</span>
+<span class="pl-c">   jobType === agent    =&gt; /Library/LaunchAgents</span>
+<span class="pl-c">   jobType === daemon   =&gt; /Library/LaunchDaemons</span>
+<span class="pl-c">domain === system</span>
+<span class="pl-c">   jobType === agent    =&gt; /System/Library/LaunchAgents</span>
+<span class="pl-c">   jobType === daemon   =&gt; /System/Library/LaunchDaemons</span>
+<span class="pl-c">*/</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">listUnitFiles</span>({domain<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>global<span class="pl-pds">'</span></span>, jobType<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>agents<span class="pl-pds">'</span></span>}, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">list</span>) {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(list)
+})</pre></div>
+
+<h1>
+<a id="install-a-service" class="anchor" href="#install-a-service" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install a service</h1>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> service <span class="pl-k">=</span> {
+  domain<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>user<span class="pl-pds">'</span></span>,
+  plist<span class="pl-k">:</span> {
+    Label<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>fake<span class="pl-pds">'</span></span>,
+    ProgramArguments<span class="pl-k">:</span> [
+      <span class="pl-s"><span class="pl-pds">'</span>/Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node<span class="pl-pds">'</span></span>,
+      <span class="pl-s"><span class="pl-pds">'</span>/Users/vagrant/wd/utils/fake-service.js<span class="pl-pds">'</span></span>
+    ]
+  }
+}
+<span class="pl-smi">lsa</span>.<span class="pl-en">install</span>(service, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">results</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+  <span class="pl-k">var</span> serviceFile <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>/Users/vagrant/Library/LaunchAgents/fake.plist<span class="pl-pds">'</span></span>;
+  <span class="pl-smi">fs</span>.<span class="pl-en">readFile</span>(serviceFile, <span class="pl-k">function</span> (<span class="pl-smi">err2</span>, <span class="pl-smi">content</span>){
+    err2 <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err2);
+    <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-smi">content</span>.<span class="pl-c1">toString</span>())
+  })
+})
+
+<span class="pl-c">// find the corresponding service file, then deletes it</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">uninstall</span>(<span class="pl-s"><span class="pl-pds">'</span>fake<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">results</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})
+
+<span class="pl-c">// deletes given service file definition</span>
+<span class="pl-smi">lsa</span>.<span class="pl-en">uninstallUnitFile</span>(<span class="pl-s"><span class="pl-pds">'</span>/Users/vagrant/Library/LaunchAgents/fake.plist<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">results</span>) {
+  err <span class="pl-k">&amp;&amp;</span> <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+})</pre></div>
+
+<h1>
+<a id="read-more" class="anchor" href="#read-more" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Read more</h1>
+
+<ul>
+<li><a href="http://launchd.info/">http://launchd.info/</a></li>
+<li><a href="https://developer.apple.com/library/mac/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html">https://developer.apple.com/library/mac/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html</a></li>
+<li><a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/launchctl.1.html">https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/launchctl.1.html</a></li>
+<li><a href="http://alvinalexander.com/mac-os-x/launchd-examples-launchd-plist-file-examples-mac">http://alvinalexander.com/mac-os-x/launchd-examples-launchd-plist-file-examples-mac</a></li>
+</ul>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/mh-cbon/launchd-simple-api">Launchd-simple-api</a> is maintained by <a href="https://github.com/mh-cbon">mh-cbon</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
