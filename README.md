@@ -5,7 +5,7 @@ Simple API to manage services via macosx launchd
 # Install
 
 ```sh
-npm i @mh-cbon/launchd-simple-api
+npm i @mh-cbon/launchd-simple-api --save
 ```
 
 # Usage
