@@ -9,3 +9,5 @@ cd /Users/vagrant/wd
 /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/npm i
 /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/mocha test/index.js
 /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/mocha test/funct-user.js
+sudo /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/mocha test/funct-system.js
+SUDOPWD="" /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node /Users/vagrant/node/node-v5.9.1-darwin-x64/bin/mocha test/funct-system.js

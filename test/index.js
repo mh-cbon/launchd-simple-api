@@ -40,8 +40,6 @@ describe('launchd simple api', function() {
   it('should describe a service file', function(done) {
     lsa.describeFile('/System/Library/LaunchAgents/com.apple.cfprefsd.xpc.agent.plist', function (err, results) {
       err && console.error(err);
-      console.log(err);
-      console.log(results);
       results.Label.should.eql('com.apple.cfprefsd.xpc.agent');
       results.ProgramArguments.should.eql(['/usr/sbin/cfprefsd', 'agent']);
       done(err);
@@ -51,7 +49,7 @@ describe('launchd simple api', function() {
   it('should properly fail to describe a service file', function(done) {
     lsa.describeFile('wxcwxcwxc', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     })
   });
@@ -68,7 +66,7 @@ describe('launchd simple api', function() {
   it('should properly fail to describe a service', function(done) {
     lsa.describe('wxcwxcwxc', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     })
   });
@@ -76,7 +74,7 @@ describe('launchd simple api', function() {
   it('should test a service file', function(done) {
     lsa.testUnitFile('/System/Library/LaunchAgents/com.apple.cfprefsd.xpc.agent.plist', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done();
     })
   });
@@ -84,7 +82,7 @@ describe('launchd simple api', function() {
   it('should properly fail to test a service file', function(done) {
     lsa.testUnitFile(__dirname + '/index.js', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     })
   });
@@ -102,7 +100,7 @@ describe('launchd simple api', function() {
   it('should properly fail to convert a service file to json', function(done) {
     lsa.convertUnitFile(__dirname + '/index.js', 'json', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     })
   });
@@ -113,7 +111,7 @@ describe('launchd simple api', function() {
       results.should.match(/<key>what<\/key>/)
       results.should.match(/<string>ever<\/string>/)
       console.log(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done();
     })
   });
@@ -155,7 +153,7 @@ describe('launchd simple api', function() {
     }
     lsa.install(service, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     })
   });
@@ -163,7 +161,7 @@ describe('launchd simple api', function() {
   it('should load a service', function(done) {
     lsa.load('fake', {}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done()
     })
   });
@@ -171,7 +169,7 @@ describe('launchd simple api', function() {
   it('should unload a service', function(done) {
     lsa.unload('fake', {}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done()
     })
   });
@@ -180,7 +178,7 @@ describe('launchd simple api', function() {
     var serviceFile = '/Users/vagrant/Library/LaunchAgents/fake.plist';
     lsa.loadServiceFile(serviceFile, {}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done()
     })
   });
@@ -188,7 +186,7 @@ describe('launchd simple api', function() {
   it('should properly fail to load a service', function(done) {
     lsa.load('wxcxwc', {}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done()
     })
   });
@@ -197,7 +195,7 @@ describe('launchd simple api', function() {
     var serviceFile = '/Users/vagrant/Library/LaunchAgents/wxcwc.plist';
     lsa.loadServiceFile(serviceFile, {}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     })
   });
@@ -205,7 +203,7 @@ describe('launchd simple api', function() {
   it('should properly fail to unload a service', function(done) {
     lsa.unload('wxcxwc', {}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     });
   });
@@ -215,7 +213,7 @@ describe('launchd simple api', function() {
     lsa.unloadServiceFile(serviceFile, {}, function (err, results) {
       err && console.error(err);
       console.log('%j', err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done()
     });
   });
@@ -223,7 +221,7 @@ describe('launchd simple api', function() {
   it('should start a service', function(done) {
     lsa.start('fake', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done()
     })
   });
@@ -231,7 +229,7 @@ describe('launchd simple api', function() {
   it('should properly fail to start a service', function(done) {
     lsa.start('xcwcxwc', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done()
     })
   });
@@ -239,7 +237,7 @@ describe('launchd simple api', function() {
   it('should stop a service', function(done) {
     lsa.stop('fake', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done()
     })
   });
@@ -247,7 +245,7 @@ describe('launchd simple api', function() {
   it('should properly fail to stop a service', function(done) {
     lsa.stop('xcwcxwc', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done()
     })
   });
@@ -255,7 +253,7 @@ describe('launchd simple api', function() {
   it('should restart a service', function(done) {
     lsa.restart('fake', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done()
     })
   });
@@ -263,7 +261,7 @@ describe('launchd simple api', function() {
   it('should properly fail to restart a service', function(done) {
     lsa.restart('xcwcxwc', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done()
     })
   });
@@ -272,7 +270,7 @@ describe('launchd simple api', function() {
     var serviceFile = '/Users/vagrant/Library/LaunchAgents/fake.plist';
     lsa.unloadServiceFile(serviceFile, {}, function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       done()
     })
   });
@@ -280,11 +278,11 @@ describe('launchd simple api', function() {
   it('should uninstall a service', function(done) {
     lsa.uninstall('fake', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(true);
+      (!err).should.eql(true);
       var serviceFile = '/Users/vagrant/Library/LaunchAgents/fake.plist';
       fs.readFile(serviceFile, function (err2, content){
         err2 && console.error(err2);
-        (err2===null).should.eql(false);
+        (!err2).should.eql(false);
         done()
       })
     })
@@ -293,7 +291,7 @@ describe('launchd simple api', function() {
   it('should properly fail to uninstall a service', function(done) {
     lsa.uninstall('fake', function (err, results) {
       err && console.error(err);
-      (err===null).should.eql(false);
+      (!err).should.eql(false);
       done();
     })
   });

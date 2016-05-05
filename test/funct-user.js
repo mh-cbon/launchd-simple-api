@@ -3,7 +3,11 @@ var fs = require('fs');
 var LaunchdSimpleApi = require('../index.js');
 
 describe('launchd-simple-api userland', function() {
+
+  this.timeout(5000);
+
   var lsa = new LaunchdSimpleApi();
+  
   it('should install the fake service', function(done) {
     var service = {
       domain: 'user',
@@ -40,7 +44,7 @@ describe('launchd-simple-api userland', function() {
     lsa.start('fake', function (err) {
       setTimeout(function(){
         done(err);
-      }, 500); // this is needed for the system to load and start the program.
+      }, 1500); // this is needed for the system to load and start the program.
     })
   });
 

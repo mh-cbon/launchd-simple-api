@@ -3,12 +3,27 @@ var fs        = require('fs-extra')
 var path      = require('path')
 var split     = require('split')
 var through2  = require('through2')
+var yasudo    = require('@mh-cbon/yasudo')
 
 var LaunchdSimpleApi = function (version) {
 
+  var pwd = false;
+  this.enableElevation = function (p) {
+    pwd = p;
+  }
+
+  var spawnAChild = function (bin, args, opts) {
+    if (pwd!==false) {
+      opts = opts || {};
+      opts.password = pwd;
+      return yasudo(bin, args, opts);
+    }
+    return spawn(bin, args, opts);
+  }
+
   this.list = function (then) {
     var results = {}
-    var c = spawn('launchctl', ['list'], {stdio: 'pipe'})
+    var c = spawnAChild('launchctl', ['list'], {stdio: 'pipe'})
     c.stdout
     .pipe(split())
     .pipe(through2(function (chunk, enc, cb) {
@@ -70,7 +85,7 @@ var LaunchdSimpleApi = function (version) {
     if (opts.domain || opts.d) args = args.concat(['-D', opts.domain || opts.d])
     args.push(fileOrDir)
 
-    var c = spawn('launchctl', args, {stdio: 'pipe'})
+    var c = spawnAChild('launchctl', args, {stdio: 'pipe'})
 
     var stdout = ''
     var stderr = ''
@@ -108,7 +123,7 @@ var LaunchdSimpleApi = function (version) {
     if (opts.domain || opts.d) args = args.concat(['-D', opts.domain || opts.d])
     args.push(fileOrDir)
 
-    var c = spawn('launchctl', args, {stdio: 'pipe'})
+    var c = spawnAChild('launchctl', args, {stdio: 'pipe'})
 
     var stdout = ''
     var stderr = ''
@@ -156,11 +171,11 @@ var LaunchdSimpleApi = function (version) {
 
     } else if(domain==='global') {
       if(jobType==='agent') dir = '/Library/LaunchAgents'
-      else if(jobType==='daemon') dir = '/Library/LaunchDaemons'
+      else if(!jobType || jobType==='daemon') dir = '/Library/LaunchDaemons'
 
     } else if(domain==='system') {
         if(jobType==='agent') dir = '/System/Library/LaunchAgents'
-        else if(jobType==='daemon') dir = '/System/Library/LaunchDaemons'
+        else if(!jobType || jobType==='daemon') dir = '/System/Library/LaunchDaemons'
     }
     return dir;
   }
@@ -176,7 +191,7 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.testUnitFile = function (file, then) {
-    var c = spawn('plutil', [file], {stdio: 'pipe'})
+    var c = spawnAChild('plutil', [file], {stdio: 'pipe'})
     var stdout = ''
     c.stdout.on('data', function (d){
       stdout += d.toString();
@@ -195,7 +210,7 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.convertUnitFile = function (file, fmt, then) {
-    var c = spawn('plutil', ['-convert', fmt, '-o', '-', file], {stdio: 'pipe'})
+    var c = spawnAChild('plutil', ['-convert', fmt, '-o', '-', file], {stdio: 'pipe'})
     var stdout = ''
     c.stdout.on('data', function (d){
       stdout += d.toString();
@@ -224,7 +239,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout : null, stdout)
+      then(code>0 ? stderr+stdout || 'error' : null, stdout)
     })
 
     c.on('error', then);
@@ -235,7 +250,7 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.start = function (serviceId, then) {
-    var c = spawn('launchctl', ['start', serviceId], {stdio: 'pipe'})
+    var c = spawnAChild('launchctl', ['start', serviceId], {stdio: 'pipe'})
     var stdout = ''
     c.stdout.on('data', function (d){
       stdout += d.toString();
@@ -245,7 +260,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout : null)
+      then(code>0 ? stderr+stdout || 'error' : null)
     })
 
     c.on('error', then);
@@ -254,7 +269,7 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.stop = function (serviceId, then) {
-    var c = spawn('launchctl', ['stop', serviceId], {stdio: 'pipe'})
+    var c = spawnAChild('launchctl', ['stop', serviceId], {stdio: 'pipe'})
     var stdout = ''
     c.stdout.on('data', function (d){
       stdout += d.toString();
@@ -264,7 +279,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout : null)
+      then(code>0 ? stderr+stdout || 'error' : null)
     })
 
     c.on('error', then);
@@ -284,9 +299,9 @@ var LaunchdSimpleApi = function (version) {
     this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
       var dir = forgePath(opts.domain, opts.jobType);
-      fs.mkdirs(dir, function (err) {
+      sudoMkdir(dir, function (err) {
         if (err) return then(err);
-        fs.writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
+        sudoFsWriteFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
       })
     })
   }
@@ -299,12 +314,59 @@ var LaunchdSimpleApi = function (version) {
           if (i===results.length-1) then(err);
         })
       })
-      if(!results.length) then()
+      if(!results.length) then('not found')
     })
   }
 
   this.uninstallUnitFile = function (file, then) {
-    fs.unlink(file, then)
+    sudoRmFile(file, then)
+  }
+
+
+  function sudoFsWriteFile (fPath, content, then) {
+    var write = spawnAChild(process.argv[0], ['node_modules/.bin/fwrite', fPath, '-v']);
+    write.stdin.end(content);
+    var stdout = '';
+    var stderr = '';
+    write.stdout.on('data', function (d) {stdout+=''+d;})
+    write.stderr.on('data', function (d) {stderr+=''+d;})
+    write.on('error', function (err) {
+      then && then(err);
+      then = null;
+    })
+    write.on('close', function (code) {
+      then && then(code===0 ? null : stdout+stderr);
+    })
+  }
+
+  function sudoRmFile (fPath, then) {
+    var rm = spawnAChild('rm', ['-f', fPath]);
+    var stdout = '';
+    var stderr = '';
+    rm.stdout.on('data', function (d) {stdout+=''+d;})
+    rm.stderr.on('data', function (d) {stderr+=''+d;})
+    rm.on('error', function (err) {
+      then && then(err);
+      then = null;
+    })
+    rm.on('close', function (code) {
+      then && then(code!==0 ? stdout+stderr : '');
+    })
+  }
+
+  function sudoMkdir (fPath, then) {
+    var mkdir = spawnAChild('mkdir', ['-p', fPath]);
+    var stdout = '';
+    var stderr = '';
+    mkdir.stdout.on('data', function (d) {stdout+=''+d;})
+    mkdir.stderr.on('data', function (d) {stderr+=''+d;})
+    mkdir.on('error', function (err) {
+      then && then(err);
+      then = null;
+    })
+    mkdir.on('close', function (code) {
+      then && then(code!==0 ? stdout+stderr : '');
+    })
   }
 
 }
