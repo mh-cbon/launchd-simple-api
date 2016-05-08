@@ -7,14 +7,14 @@ describe('launchd-simple-api userland', function() {
   this.timeout(5000);
 
   var lsa = new LaunchdSimpleApi();
-  
+
   it('should install the fake service', function(done) {
     var service = {
       domain: 'user',
       plist: {
         Label: 'fake',
         ProgramArguments: [
-          '/Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node',
+          process.argv[0],
           '/Users/vagrant/wd/utils/fake-service.js'
         ]
       }

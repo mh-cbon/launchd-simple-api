@@ -7,7 +7,7 @@ describe('launchd-simple-api root', function() {
 
   this.timeout(5000);
 
-  if ('SUDOPWD' in process.env) lsa.enableElevation(process.env['SUDOPWD']);
+  if('yasudo' in process.env) lsa.enableElevation('');
 
   it('should install the fakesys service', function(done) {
     var service = {
@@ -15,7 +15,7 @@ describe('launchd-simple-api root', function() {
       plist: {
         Label: 'fakesys',
         ProgramArguments: [
-          '/Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node',
+          process.argv[0],
           '/Users/vagrant/wd/utils/fake-service.js'
         ]
       }

@@ -122,7 +122,7 @@ describe('launchd simple api', function() {
       plist: {
         Label: 'fake',
         ProgramArguments: [
-          '/Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node',
+          process.argv[0],
           '/Users/vagrant/wd/utils/fake-service.js'
         ]
       }
@@ -146,7 +146,7 @@ describe('launchd simple api', function() {
       plist: {
         Label: 'fake',
         ProgramArguments: [
-          '/Users/vagrant/node/node-v5.9.1-darwin-x64/bin/node',
+          process.argv[0],
           '/Users/vagrant/wd/utils/fake-service.js'
         ]
       }

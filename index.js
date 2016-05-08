@@ -3,19 +3,31 @@ var fs        = require('fs-extra')
 var path      = require('path')
 var split     = require('split')
 var through2  = require('through2')
-var yasudo    = require('@mh-cbon/yasudo')
+var yasudo    = require('@mh-cbon/c-yasudo')
+var sudoFs    = require('@mh-cbon/sudo-fs')
 
 var LaunchdSimpleApi = function (version) {
 
+  var elevationEnabled = false;
   var pwd = false;
   this.enableElevation = function (p) {
+    if (p===false){
+      elevationEnabled = false;
+      pwd = false;
+      return;
+    }
+    elevationEnabled = true;
     pwd = p;
   }
 
+  var getFs = function () {
+    return elevationEnabled ? sudoFs : fs;
+  }
+
   var spawnAChild = function (bin, args, opts) {
-    if (pwd!==false) {
+    if (elevationEnabled) {
       opts = opts || {};
-      opts.password = pwd;
+      if (pwd) opts.password = pwd;
       return yasudo(bin, args, opts);
     }
     return spawn(bin, args, opts);
@@ -299,9 +311,9 @@ var LaunchdSimpleApi = function (version) {
     this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
       var dir = forgePath(opts.domain, opts.jobType);
-      sudoMkdir(dir, function (err) {
+      (getFs().mkdirs || getFs().mkdir)(dir, function (err) {
         if (err) return then(err);
-        sudoFsWriteFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
+        getFs().writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
       })
     })
   }
@@ -319,56 +331,8 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.uninstallUnitFile = function (file, then) {
-    sudoRmFile(file, then)
+    getFs().unlink(file, then)
   }
-
-
-  function sudoFsWriteFile (fPath, content, then) {
-    var write = spawnAChild(process.argv[0], ['node_modules/.bin/fwrite', fPath, '-v']);
-    write.stdin.end(content);
-    var stdout = '';
-    var stderr = '';
-    write.stdout.on('data', function (d) {stdout+=''+d;})
-    write.stderr.on('data', function (d) {stderr+=''+d;})
-    write.on('error', function (err) {
-      then && then(err);
-      then = null;
-    })
-    write.on('close', function (code) {
-      then && then(code===0 ? null : stdout+stderr);
-    })
-  }
-
-  function sudoRmFile (fPath, then) {
-    var rm = spawnAChild('rm', ['-f', fPath]);
-    var stdout = '';
-    var stderr = '';
-    rm.stdout.on('data', function (d) {stdout+=''+d;})
-    rm.stderr.on('data', function (d) {stderr+=''+d;})
-    rm.on('error', function (err) {
-      then && then(err);
-      then = null;
-    })
-    rm.on('close', function (code) {
-      then && then(code!==0 ? stdout+stderr : '');
-    })
-  }
-
-  function sudoMkdir (fPath, then) {
-    var mkdir = spawnAChild('mkdir', ['-p', fPath]);
-    var stdout = '';
-    var stderr = '';
-    mkdir.stdout.on('data', function (d) {stdout+=''+d;})
-    mkdir.stderr.on('data', function (d) {stderr+=''+d;})
-    mkdir.on('error', function (err) {
-      then && then(err);
-      then = null;
-    })
-    mkdir.on('close', function (code) {
-      then && then(code!==0 ? stdout+stderr : '');
-    })
-  }
-
 }
 
 module.exports = LaunchdSimpleApi
