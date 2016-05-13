@@ -2,6 +2,7 @@ var spawn     = require('child_process').spawn;
 var fs        = require('fs-extra')
 var path      = require('path')
 var split     = require('split')
+var async     = require('async')
 var through2  = require('through2')
 var yasudo    = require('@mh-cbon/c-yasudo')
 var sudoFs    = require('@mh-cbon/sudo-fs')
