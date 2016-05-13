@@ -6,6 +6,8 @@ var async     = require('async')
 var through2  = require('through2')
 var yasudo    = require('@mh-cbon/c-yasudo')
 var sudoFs    = require('@mh-cbon/sudo-fs')
+var pkg       = require('./package.json')
+var debug     = require('debug')(pkg.name);
 
 var LaunchdSimpleApi = function (version) {
 
@@ -27,10 +29,12 @@ var LaunchdSimpleApi = function (version) {
 
   var spawnAChild = function (bin, args, opts) {
     if (elevationEnabled) {
+      debug('sudo %s %s', bin, args.join(' '))
       opts = opts || {};
       if (pwd) opts.password = pwd;
       return yasudo(bin, args, opts);
     }
+    debug('%s %s', bin, args.join(' '))
     return spawn(bin, args, opts);
   }
 
@@ -67,6 +71,7 @@ var LaunchdSimpleApi = function (version) {
   this.describe = function (serviceId, then) {
     var that = this;
     that.findUnitFile(serviceId, function (err, results) {
+      if(!results.length) return then('not found')
       that.describeFile(results[0], then)
     })
   }
@@ -89,8 +94,8 @@ var LaunchdSimpleApi = function (version) {
       that.loadServiceFile(results[0], opts, then)
     })
   }
-  this.loadServiceFile = function (fileOrDir, opts, then) {
 
+  this.loadServiceFile = function (fileOrDir, opts, then) {
     var args = ['load']
     if (opts.disabled || opts.d) args.push('-w')
     if (opts.force || opts.f) args.push('-F')
@@ -128,8 +133,8 @@ var LaunchdSimpleApi = function (version) {
       that.unloadServiceFile(results[0], opts, then)
     })
   }
-  this.unloadServiceFile = function (fileOrDir, opts, then) {
 
+  this.unloadServiceFile = function (fileOrDir, opts, then) {
     var args = ['unload']
     if (opts.disabled || opts.d) args.push('-w')
     if (opts.session || opts.s) args = args.concat(['-S', opts.session || opts.s])
@@ -172,7 +177,10 @@ var LaunchdSimpleApi = function (version) {
       var k = path.join(dir, serviceId + '.plist');
       fs.access(k, fs.FS_OK, function (err){
         if(!err) results.push(k);
-        if(i===paths.length-1) then(null, results);
+        if(i===paths.length-1) {
+          debug('findUnitFile %s', results)
+          then(null, results);
+        }
       })
     })
   }
@@ -190,6 +198,7 @@ var LaunchdSimpleApi = function (version) {
         if(jobType==='agent') dir = '/System/Library/LaunchAgents'
         else if(!jobType || jobType==='daemon') dir = '/System/Library/LaunchDaemons'
     }
+    debug('forgePath %s %s %s', domain, jobType, dir)
     return dir;
   }
 
