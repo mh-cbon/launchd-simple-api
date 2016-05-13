@@ -311,6 +311,7 @@ var LaunchdSimpleApi = function (version) {
   this.install = function (opts, then) {
     this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
+      var dir = forgePath(opts.domain, opts.jobType);
       async.series([
         function (next) {
           if (opts.plist.StandardOutPath) {
@@ -323,7 +324,6 @@ var LaunchdSimpleApi = function (version) {
           }
         },
         function (next) {
-          var dir = forgePath(opts.domain, opts.jobType);
           (getFs().mkdirs || getFs().mkdir)(dir, next);
         },
         function (next) {
