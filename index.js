@@ -313,13 +313,13 @@ var LaunchdSimpleApi = function (version) {
       if(err) return then(err);
       async.series([
         function (next) {
-          if (service.plist.StandardOutPath) {
-            return (getFs().mkdirs || getFs().mkdir)(path.dirname(service.plist.StandardOutPath), next);
+          if (opts.plist.StandardOutPath) {
+            return (getFs().mkdirs || getFs().mkdir)(path.dirname(opts.plist.StandardOutPath), next);
           }
         },
         function (next) {
-          if (service.plist.StandardErrorPath) {
-            return (getFs().mkdirs || getFs().mkdir)(path.dirname(service.plist.StandardErrorPath), next);
+          if (opts.plist.StandardErrorPath) {
+            return (getFs().mkdirs || getFs().mkdir)(path.dirname(opts.plist.StandardErrorPath), next);
           }
         },
         function (next) {
