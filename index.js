@@ -71,7 +71,7 @@ var LaunchdSimpleApi = function (version) {
   this.describe = function (serviceId, then) {
     var that = this;
     that.findUnitFile(serviceId, function (err, results) {
-      if(!results.length) return then('not found')
+      if(!results.length) return then(new Error('service not found: ' + serviceId))
       that.describeFile(results[0], then)
     })
   }
@@ -92,7 +92,7 @@ var LaunchdSimpleApi = function (version) {
     debug('load %s', serviceId);
     that.findUnitFile(serviceId, function (err, results){
       debug('results %j', results);
-      if(!results.length) return then('not found');
+      if(!results.length) return then(new Error('service not found: ' + serviceId));
       that.loadServiceFile(results[0], opts, then)
     })
   }
@@ -131,7 +131,7 @@ var LaunchdSimpleApi = function (version) {
   this.unload = function (serviceId, opts, then) {
     var that = this;
     that.findUnitFile(serviceId, function (err, results){
-      if(!results.length) return then('not found')
+      if(!results.length) return then(new Error('service not found: ' + serviceId))
       that.unloadServiceFile(results[0], opts, then)
     })
   }
@@ -225,7 +225,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout : null)
+      then(code>0 ? new Error(stderr+stdout || 'error') : null)
     })
 
     c.on('error', then);
@@ -244,7 +244,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout : null, stdout)
+      then(code>0 ? new Error(stderr+stdout || 'error') : null, stdout)
     })
 
     c.on('error', then);
@@ -263,7 +263,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout || 'error' : null, stdout)
+      then(code>0 ? new Error(stderr+stdout || 'error') : null, stdout)
     })
 
     c.on('error', then);
@@ -284,7 +284,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout || 'error' : null)
+      then(code>0 ? new Error(stderr+stdout || 'error') : null)
     })
 
     c.on('error', then);
@@ -303,7 +303,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? stderr+stdout || 'error' : null)
+      then(code>0 ? new Error(stderr+stdout || 'error') : null)
     })
 
     c.on('error', then);
@@ -354,7 +354,7 @@ var LaunchdSimpleApi = function (version) {
           if (i===results.length-1) then(err);
         })
       })
-      if(!results.length) then('not found')
+      if(!results.length) return then(new Error('service not found: ' + serviceId))
     })
   }
 
