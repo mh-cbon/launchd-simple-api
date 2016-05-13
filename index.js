@@ -89,15 +89,17 @@ var LaunchdSimpleApi = function (version) {
 
   this.load = function (serviceId, opts, then) {
     var that = this;
+    debug('load %s', serviceId);
     that.findUnitFile(serviceId, function (err, results){
-      if(!results.length) return then('not found')
+      debug('results %j', results);
+      if(!results.length) return then('not found');
       that.loadServiceFile(results[0], opts, then)
     })
   }
 
   this.loadServiceFile = function (fileOrDir, opts, then) {
     var args = ['load']
-    if (opts.disabled || opts.d) args.push('-w')
+    if (opts.enable || opts.e) args.push('-w')
     if (opts.force || opts.f) args.push('-F')
     if (opts.session || opts.s) args = args.concat(['-S', opts.session || opts.s])
     if (opts.domain || opts.d) args = args.concat(['-D', opts.domain || opts.d])
@@ -136,7 +138,7 @@ var LaunchdSimpleApi = function (version) {
 
   this.unloadServiceFile = function (fileOrDir, opts, then) {
     var args = ['unload']
-    if (opts.disabled || opts.d) args.push('-w')
+    if (opts.enable || opts.e) args.push('-w')
     if (opts.session || opts.s) args = args.concat(['-S', opts.session || opts.s])
     if (opts.domain || opts.d) args = args.concat(['-D', opts.domain || opts.d])
     args.push(fileOrDir)
@@ -178,7 +180,7 @@ var LaunchdSimpleApi = function (version) {
       fs.access(k, fs.FS_OK, function (err){
         if(!err) results.push(k);
         if(i===paths.length-1) {
-          debug('findUnitFile %s', results)
+          debug('findUnitFile %s', results);
           then(null, results);
         }
       })
@@ -318,9 +320,11 @@ var LaunchdSimpleApi = function (version) {
   }
 
   this.install = function (opts, then) {
+    debug('install %j', opts)
     this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
       var dir = forgePath(opts.domain, opts.jobType);
+      debug('dir %s', dir)
       async.series([
         function (next) {
           if (opts.plist.StandardOutPath) {
