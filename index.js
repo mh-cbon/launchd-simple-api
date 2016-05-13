@@ -310,11 +310,25 @@ var LaunchdSimpleApi = function (version) {
   this.install = function (opts, then) {
     this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
-      var dir = forgePath(opts.domain, opts.jobType);
-      (getFs().mkdirs || getFs().mkdir)(dir, function (err) {
-        if (err) return then(err);
-        getFs().writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, then)
-      })
+      async.series([
+        function (next) {
+          if (service.plist.StandardOutPath) {
+            return (getFs().mkdirs || getFs().mkdir)(path.dirname(service.plist.StandardOutPath), next);
+          }
+        },
+        function (next) {
+          if (service.plist.StandardErrorPath) {
+            return (getFs().mkdirs || getFs().mkdir)(path.dirname(service.plist.StandardErrorPath), next);
+          }
+        },
+        function (next) {
+          var dir = forgePath(opts.domain, opts.jobType);
+          (getFs().mkdirs || getFs().mkdir)(dir, next);
+        },
+        function (next) {
+          getFs().writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, next)
+        }
+      ], then)
     })
   }
 
