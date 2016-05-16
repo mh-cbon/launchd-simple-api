@@ -50,7 +50,7 @@ describe('launchd-simple-api root', function() {
   });
 
   it('should list the fake service', function(done) {
-    lsa.list(function (err, list) {
+    lsa.list(false, function (err, list) {
       ('fakesys' in list).should.eql(true);
       list['fakesys'].id.should.eql('fakesys');
       done();
