@@ -38,9 +38,11 @@ var LaunchdSimpleApi = function (version) {
     return spawn(bin, args, opts);
   }
 
-  this.list = function (then) {
+  this.list = function (userMode, then) {
     var results = {}
-    var c = spawnAChild('launchctl', ['list'], {stdio: 'pipe'})
+    var c;
+    if (userMode) c = spawn('launchctl', ['list'], {stdio: 'pipe'})
+    else c = spawnAChild('launchctl', ['list'], {stdio: 'pipe'})
     c.stdout
     .pipe(split())
     .pipe(through2(function (chunk, enc, cb) {
@@ -58,10 +60,9 @@ var LaunchdSimpleApi = function (version) {
         }
       }
       cb();
-    }, function (cb) {
+    })).on('end', function () {
       then && then(null, results)
-      cb();
-    }))
+    })
 
     c.on('error', then);
 

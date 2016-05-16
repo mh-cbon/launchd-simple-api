@@ -23,7 +23,7 @@ describe('launchd-simple-api userland', function() {
   });
 
   it('should not list the fake service', function(done) {
-    lsa.list(function (err, list) {
+    lsa.list(true, function (err, list) {
       ('fake' in list).should.eql(false);
       done();
     })
@@ -34,7 +34,7 @@ describe('launchd-simple-api userland', function() {
   });
 
   it('should list the fake service', function(done) {
-    lsa.list(function (err, list) {
+    lsa.list(true, function (err, list) {
       ('fake' in list).should.eql(true);
       done();
     })
@@ -49,7 +49,7 @@ describe('launchd-simple-api userland', function() {
   });
 
   it('should list the fake service', function(done) {
-    lsa.list(function (err, list) {
+    lsa.list(true, function (err, list) {
       ('fake' in list).should.eql(true);
       list['fake'].id.should.eql('fake');
       done();
