@@ -8,8 +8,11 @@ var yasudo    = require('@mh-cbon/c-yasudo')
 var sudoFs    = require('@mh-cbon/sudo-fs')
 var pkg       = require('./package.json')
 var debug     = require('debug')(pkg.name);
+var dStream   = require('debug-stream')(debug)
 
 var LaunchdSimpleApi = function (version) {
+
+  var that = this;
 
   var elevationEnabled = false;
   var pwd = false;
@@ -38,10 +41,11 @@ var LaunchdSimpleApi = function (version) {
     return spawn(bin, args, opts);
   }
 
-  this.list = function (userMode, then) {
+  this.list = function (opts, then) {
     var results = {}
     var c;
-    if (userMode) c = spawn('launchctl', ['list'], {stdio: 'pipe'})
+    var domain = opts.domain || opts.d;
+    if (domain==='user') c = spawn('launchctl', ['list'], {stdio: 'pipe'})
     else c = spawnAChild('launchctl', ['list'], {stdio: 'pipe'})
     c.stdout
     .pipe(split())
@@ -60,11 +64,15 @@ var LaunchdSimpleApi = function (version) {
         }
       }
       cb();
-    })).on('end', function () {
-      then && then(null, results)
-    })
+    }, function (cb) {
+      then && then(null, results);
+      cb();
+    }))
 
     c.on('error', then);
+
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
 
     return c;
   }
@@ -117,6 +125,9 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
 
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
+
     c.on('close', function (code){
       // on yosemite, a file not found will not return an exit code>0
       // so, we shall apply some patch.
@@ -162,6 +173,9 @@ var LaunchdSimpleApi = function (version) {
       then(code>0 ? stdout+stderr : null)
     })
 
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
+
     c.on('error', then);
 
     return c;
@@ -188,7 +202,10 @@ var LaunchdSimpleApi = function (version) {
     })
   }
 
-  var forgePath = function (domain, jobType) {
+
+  this.forgePath = function (opts) {
+    var domain = opts.d || opts.domain;
+    var jobType = opts.jobType;
     var dir = null;
     if (domain==='user') {
       dir = process.env['HOME'] + '/Library/LaunchAgents'
@@ -198,15 +215,27 @@ var LaunchdSimpleApi = function (version) {
       else if(!jobType || jobType==='daemon') dir = '/Library/LaunchDaemons'
 
     } else if(domain==='system') {
-        if(jobType==='agent') dir = '/System/Library/LaunchAgents'
-        else if(!jobType || jobType==='daemon') dir = '/System/Library/LaunchDaemons'
+      if(jobType==='agent') dir = '/System/Library/LaunchAgents'
+      else if(!jobType || jobType==='daemon') dir = '/System/Library/LaunchDaemons'
     }
     debug('forgePath %s %s %s', domain, jobType, dir)
     return dir;
   }
 
+  this.forgeStdLogPath = function (opts) {
+    var domain = opts.d || opts.domain;
+    var dir = null;
+    if (domain==='user') {
+      dir = process.env['HOME'] + "/Library/Logs/"
+    } else {
+      dir = "/private/var/log/"
+    }
+    debug('forgeStdLogPath %s %s %s', domain, dir)
+    return dir;
+  }
+
   this.listUnitFiles = function (opts, then) {
-    var dir = forgePath(opts.domain, opts.jobType);
+    var dir = this.forgePath(opts);
     fs.readdir(dir, function (err, files) {
       if (err) return then(err);
       then(null, files.map(function (name){
@@ -229,6 +258,9 @@ var LaunchdSimpleApi = function (version) {
       then(code>0 ? new Error(stderr+stdout || 'error') : null)
     })
 
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
+
     c.on('error', then);
 
     return c;
@@ -248,6 +280,9 @@ var LaunchdSimpleApi = function (version) {
       then(code>0 ? new Error(stderr+stdout || 'error') : null, stdout)
     })
 
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
+
     c.on('error', then);
 
     return c;
@@ -266,6 +301,9 @@ var LaunchdSimpleApi = function (version) {
     c.on('close', function (code){
       then(code>0 ? new Error(stderr+stdout || 'error') : null, stdout)
     })
+
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
 
     c.on('error', then);
 
@@ -288,6 +326,9 @@ var LaunchdSimpleApi = function (version) {
       then(code>0 ? new Error(stderr+stdout || 'error') : null)
     })
 
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
+
     c.on('error', then);
 
     return c;
@@ -307,6 +348,9 @@ var LaunchdSimpleApi = function (version) {
       then(code>0 ? new Error(stderr+stdout || 'error') : null)
     })
 
+    c.stdout.pipe(dStream('process.stdout: %s').resume())
+    c.stderr.pipe(dStream('process.stderr: %s').resume())
+
     c.on('error', then);
 
     return c;
@@ -324,25 +368,34 @@ var LaunchdSimpleApi = function (version) {
     debug('install %j', opts)
     this.convertJsonToPlist(opts.plist, function(err, plist) {
       if(err) return then(err);
-      var dir = forgePath(opts.domain, opts.jobType);
+      var dir = that.forgePath(opts);
+      var fPath = path.join(dir, opts.plist.Label + '.plist');
       debug('dir %s', dir)
       async.series([
         function (next) {
           if (opts.plist.StandardOutPath) {
             return (getFs().mkdirs || getFs().mkdir)(path.dirname(opts.plist.StandardOutPath), next);
           }
+          next();
         },
         function (next) {
           if (opts.plist.StandardErrorPath) {
             return (getFs().mkdirs || getFs().mkdir)(path.dirname(opts.plist.StandardErrorPath), next);
           }
+          next();
         },
         function (next) {
           (getFs().mkdirs || getFs().mkdir)(dir, next);
         },
         function (next) {
-          getFs().writeFile(path.join(dir, opts.plist.Label + '.plist'), plist, next)
-        }
+          getFs().writeFile(fPath, plist, next)
+        },
+        function (next) {
+          getFs().chmod(fPath, 0644, next)
+        },
+        function (next) {
+          getFs().chmod(dir, 0755, next)
+        },
       ], then)
     })
   }

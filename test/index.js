@@ -8,7 +8,7 @@ var LaunchdSimpleApi  = require('../index.js');
 describe('launchd simple api', function() {
   var lsa = new LaunchdSimpleApi()
   it('should list services', function(done) {
-    lsa.list(false, function (err, items) {
+    lsa.list({}, function (err, items) {
       err && console.error(err);
       // yosemite box exposes service 'com.apple.usernoted'
       if (process.env['BOXTYPE']==='yosemite') {

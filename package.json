@@ -26,6 +26,7 @@
     "@mh-cbon/sudo-fs": "^1.0.1",
     "async": "^1.5.2",
     "debug": "^2.2.0",
+    "debug-stream": "^3.0.1",
     "fs-extra": "^0.26.7",
     "split": "^1.0.0",
     "through2": "^2.0.1"
