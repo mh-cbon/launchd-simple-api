@@ -360,7 +360,7 @@ var LaunchdSimpleApi = function (version) {
     var that = this;
     that.stop(serviceId, function (err) {
       if (err) return then(err);
-      that.stop(serviceId, then)
+      that.start(serviceId, then)
     })
   }
 
