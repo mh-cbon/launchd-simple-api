@@ -48,11 +48,11 @@ var LaunchdSimpleApi = function (version) {
     .pipe(split())
     .pipe(through2(function (chunk, enc, cb) {
       var d = chunk.toString();
-      if (d.match(/PID\s+status\s+label/)) {
+      if (d.match(/^PID\s+status\s+label/)) {
         // skip headers
-      } else if (d.match(/^(-|[0-9]+)\s+(-|[0-9]+)\s+.+/)) {
+      } else if (d.match(/^(-|[0-9\-]+)\s+(-|[0-9\-]+)\s+.+/)) {
         //1419	-	0x7f97d040ea20.anonymous.launchctl
-        d = d.match(/^(-|[0-9]+)\s+(-|[0-9]+)\s+(.+)/);
+        d = d.match(/^(-|[0-9\-]+)\s+(-|[0-9\-]+)\s+(.+)/);
         var id = d && d[3];
         results[id] = {
           pid: d && d[1],
