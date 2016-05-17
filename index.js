@@ -43,10 +43,7 @@ var LaunchdSimpleApi = function (version) {
 
   this.list = function (opts, then) {
     var results = {}
-    var c;
-    var domain = opts.domain || opts.d;
-    if (domain==='user') c = spawn('launchctl', ['list'], {stdio: 'pipe'})
-    else c = spawnAChild('launchctl', ['list'], {stdio: 'pipe'})
+    var c = spawnAChild('launchctl', ['list'], {stdio: 'pipe'})
     c.stdout
     .pipe(split())
     .pipe(through2(function (chunk, enc, cb) {
