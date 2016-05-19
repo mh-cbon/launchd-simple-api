@@ -85,6 +85,7 @@ var LaunchdSimpleApi = function (version) {
   this.describeFile = function (file, then) {
     return this.convertUnitFile(file, 'json', function (err, content){
       if (err) return then(err);
+      debug('content=%j', content);
       try{
         return then(null, JSON.parse(content))
       }catch(ex){
@@ -129,7 +130,7 @@ var LaunchdSimpleApi = function (version) {
       // on yosemite, a file not found will not return an exit code>0
       // so, we shall apply some patch.
       if (code===0 && (stdout+stderr).match(/(No such file or directory)/)) code = 1;
-      then(code>0 ? stdout+stderr : null)
+      then(code>0 ? new Error('code='+code+'\n'+stdout+'\n'+stderr) : null)
     })
 
     c.on('error', then);
@@ -167,7 +168,7 @@ var LaunchdSimpleApi = function (version) {
       // on yosemite, a file not found will not return an exit code>0
       // so, we shall apply some patch.
       if (code===0 && (stdout+stderr).match(/(No such file or directory)/)) code = 1;
-      then(code>0 ? stdout+stderr : null)
+      then(code>0 ? new Error('code='+code+'\n'+stdout+'\n'+stderr) : null)
     })
 
     c.stdout.pipe(dStream('process.stdout: %s').resume())
@@ -252,7 +253,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? new Error(stderr+stdout || 'error') : null)
+      then(code>0 ? new Error('code='+code+'\n'+stdout+'\n'+stderr) : null, stdout)
     })
 
     c.stdout.pipe(dStream('process.stdout: %s').resume())
@@ -274,7 +275,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? new Error(stderr+stdout || 'error') : null, stdout)
+      then(code>0 ? new Error('code='+code+'\n'+stdout+'\n'+stderr) : null, stdout)
     })
 
     c.stdout.pipe(dStream('process.stdout: %s').resume())
@@ -296,7 +297,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? new Error(stderr+stdout || 'error') : null, stdout)
+      then(code>0 ? new Error('code='+code+'\n'+stdout+'\n'+stderr) : null, stdout)
     })
 
     c.stdout.pipe(dStream('process.stdout: %s').resume())
@@ -320,7 +321,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? new Error(stderr+stdout || 'error') : null)
+      then(code>0 ? new Error('code='+code+'\n'+stdout+'\n'+stderr) : null)
     })
 
     c.stdout.pipe(dStream('process.stdout: %s').resume())
@@ -342,7 +343,7 @@ var LaunchdSimpleApi = function (version) {
       stderr += d.toString();
     })
     c.on('close', function (code){
-      then(code>0 ? new Error(stderr+stdout || 'error') : null)
+      then(code>0 ? new Error('code='+code+'\n'+stdout+'\n'+stderr) : null)
     })
 
     c.stdout.pipe(dStream('process.stdout: %s').resume())
@@ -382,7 +383,8 @@ var LaunchdSimpleApi = function (version) {
           next();
         },
         function (next) {
-          (getFs().mkdirs || getFs().mkdir)(dir, next);
+          if ((opts.d || opts.domain)==='user') (getFs().mkdirs || getFs().mkdir)(dir, next);
+          else next(); // don t create the path for a system directory
         },
         function (next) {
           getFs().writeFile(fPath, plist, next)
@@ -391,7 +393,8 @@ var LaunchdSimpleApi = function (version) {
           getFs().chmod(fPath, 0644, next)
         },
         function (next) {
-          getFs().chmod(dir, 0755, next)
+          if ((opts.d || opts.domain)==='user') getFs().chmod(dir, 0755, next)
+          else next(); // don t change the mod for a system directory
         },
       ], then)
     })
